@@ -1,4 +1,3 @@
-import json
 import requests
 from pycerego.core.mappings import language_code
 
@@ -17,6 +16,7 @@ def _root_call(method, endpoint, cerego_misc, params={}, response_type="text"):
     if response_type == "text":
         return response.text
     elif response_type == "json":
+        print response.json()
         return response.json()['response']
     elif response_type == "binary":
         return response.content
@@ -27,11 +27,11 @@ def _get_profile(cerego_misc):
 
 def _get_set(cerego_misc, set_id):
 
-    return _root_call("GET", "sets/" + set_id, cerego_misc=cerego_misc, response_type="json")
+    return _root_call("GET", "sets/" + str(set_id), cerego_misc=cerego_misc, response_type="json")
 
 def _get_items_in_set(cerego_misc, set_id):
 
-    return _root_call("GET", "sets/" + set_id + "/items", cerego_misc=cerego_misc, response_type="json")
+    return _root_call("GET", "sets/" + str(set_id) + "/items", cerego_misc=cerego_misc, response_type="json")
 
 def _get_series_index(cerego_misc):
 
@@ -44,12 +44,12 @@ def _create_set(cerego_misc, name, lang):
 
 def _create_set_concept(cerego_misc, set_id, params):
 
-    return _root_call("POST", "sets/" + set_id + "/concepts", cerego_misc=cerego_misc, response_type="json", params=params)
+    return _root_call("POST", "sets/" + str(set_id) + "/concepts", cerego_misc=cerego_misc, response_type="json", params=params)
 
 def _create_set_item(cerego_misc, set_id, concept_id):
 
     params = {"association_collection[concept_id]": concept_id}
-    return _root_call("POST", "sets/" + set_id + "/items", cerego_misc=cerego_misc, response_type="json", params=params)
+    return _root_call("POST", "sets/" + str(set_id) + "/items", cerego_misc=cerego_misc, response_type="json", params=params)
 
 def _create_set_facet(cerego_misc, item_id, set_id, association_concept_id):
 

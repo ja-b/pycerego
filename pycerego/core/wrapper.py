@@ -11,7 +11,7 @@ class CeregoWrapper(object):
         
         self.misc = 0
         self.data_history_queue = []
-        self.loaded_set_data = {}
+        self.loaded_set_data = {'head': "", 'id': -1, 'items': {}}
     
     def set_misc(self, token, host="http://api.cerego.com/v2/"):
         
@@ -40,9 +40,9 @@ class CeregoWrapper(object):
         self.loaded_set_data['id'] = set_id
         self.loaded_set_data['head'] = self.get_set(set_id)
         item_data = self.get_items_in_set(set_id)
-        item_names = []
+        item_names = {}
         for item in item_data:
-            item_names.append(item['association_collection']['concept']['text'])
+            item_names[item['association_collection']['concept']['text']] = item['association_collection']['concept']['id']
         self.loaded_set_data['items'] = item_names
         return self.loaded_set_data
 
@@ -75,14 +75,29 @@ class CeregoWrapper(object):
         self.data_history_queue.append(response)
         return response
 
-    def create_item_anchor_association(self, set_id, anchor, association):
+    def create_item_anchor_association(self, anchor, association, set_id=-1):
 
+        if set_id == -1:
+            set_id = self.loaded_set_data['id']
         anchor_object = {"text": anchor}
         association_object = {"text": association}
-        self.create_set_concept(set_id, anchor_object)
-        self.create_set_concept(set_id, association_object)
-        self.create_set_item(set_id, self.get_scope_id(is_concept=True, prev_state=1))
-        return self.create_set_facet(self.get_scope_id(), set_id, self.get_scope_id(is_concept=True, prev_state=1))
+        if anchor not in self.loaded_set_data['items']:
+            self.create_set_concept(set_id, anchor_object)
+            self.create_set_concept(set_id, association_object)
+            self.create_set_item(set_id, self.get_scope_id(is_concept=True, prev_state=1))
+            return self.create_set_facet(self.get_scope_id(), set_id, self.get_scope_id(is_concept=True, prev_state=1))
+        else:
+            item_id = self.loaded_set_data['items'][anchor]
+            self.create_set_concept(set_id, association_object)
+            return self.create_set_facet(item_id, set_id, self.get_scope_id(is_concept=True, prev_state=0))
+
+    def create_set_and_populate(self, set_name, assoc_mapping):
+
+        s_id = self.create_set(set_name)['id']
+        self.load_set_data(s_id)
+        for key, value in assoc_mapping.iteritems():
+            self.create_item_anchor_association(key, value)
+            self.load_set_data(s_id)
 
     def get_scope_id(self, is_concept=False, prev_state=0):
 
@@ -97,4 +112,5 @@ if __name__ == "__main__":
     token = "HSJXbAXVEcORLfp4bzyH9+mJqedIFgVXrMeJyDY0I5cV+x/M1B4NKKrXIKYKsdp1"
     cg_wrapper = CeregoWrapper()
     cg_wrapper.set_misc(token)
-    pprint.pprint(cg_wrapper.load_set_data("735960"))
+    main_standard_mapping = {'white': "shiroi", 'black': 'kuroi', 'red': 'akai', 'blue': 'ao', 'green': 'midori'}
+    cg_wrapper.create_set_and_populate("random_data", main_standard_mapping)
