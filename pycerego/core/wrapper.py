@@ -42,7 +42,7 @@ class CeregoWrapper(object):
         item_data = self.get_items_in_set(set_id)
         item_names = {}
         for item in item_data:
-            item_names[item['association_collection']['concept']['text']] = item['association_collection']['concept']['id']
+            item_names[item['association_collection']['concept']['text']] = item['id']
         self.loaded_set_data['items'] = item_names
         return self.loaded_set_data
 
@@ -70,12 +70,12 @@ class CeregoWrapper(object):
         self.data_history_queue.append(response)
         return response
 
-    def create_set_facet(self, item_id, set_id, association_concept_id):
-        response = _create_set_facet(self.misc, item_id, set_id, association_concept_id)
+    def create_set_facet(self, item_id, set_id, association_concept_id, label):
+        response = _create_set_facet(self.misc, item_id, set_id, association_concept_id, label)
         self.data_history_queue.append(response)
         return response
 
-    def create_item_anchor_association(self, anchor, association, set_id=-1):
+    def create_item_anchor_association(self, anchor, association, label='', set_id=-1):
 
         if set_id == -1:
             set_id = self.loaded_set_data['id']
@@ -85,19 +85,24 @@ class CeregoWrapper(object):
             self.create_set_concept(set_id, anchor_object)
             self.create_set_concept(set_id, association_object)
             self.create_set_item(set_id, self.get_scope_id(is_concept=True, prev_state=1))
-            return self.create_set_facet(self.get_scope_id(), set_id, self.get_scope_id(is_concept=True, prev_state=1))
+            return self.create_set_facet(self.get_scope_id(), set_id, self.get_scope_id(is_concept=True, prev_state=1), label)
         else:
             item_id = self.loaded_set_data['items'][anchor]
             self.create_set_concept(set_id, association_object)
-            return self.create_set_facet(item_id, set_id, self.get_scope_id(is_concept=True, prev_state=0))
+            return self.create_set_facet(item_id, set_id, self.get_scope_id(is_concept=True, prev_state=0), label)
 
     def create_set_and_populate(self, set_name, assoc_mapping):
 
         s_id = self.create_set(set_name)['id']
         self.load_set_data(s_id)
         for key, value in assoc_mapping.iteritems():
-            self.create_item_anchor_association(key, value)
-            self.load_set_data(s_id)
+            if type(value) is list:
+                for item in value:
+                    self.create_item_anchor_association(key, item["value"], item["label"])
+                    self.load_set_data(s_id)
+            else:
+                self.create_item_anchor_association(key, value["value"], value["label"])
+                self.load_set_data(s_id)
 
     def get_scope_id(self, is_concept=False, prev_state=0):
 
@@ -112,5 +117,3 @@ if __name__ == "__main__":
     token = "HSJXbAXVEcORLfp4bzyH9+mJqedIFgVXrMeJyDY0I5cV+x/M1B4NKKrXIKYKsdp1"
     cg_wrapper = CeregoWrapper()
     cg_wrapper.set_misc(token)
-    main_standard_mapping = {'white': "shiroi", 'black': 'kuroi', 'red': 'akai', 'blue': 'ao', 'green': 'midori'}
-    cg_wrapper.create_set_and_populate("random_data", main_standard_mapping)

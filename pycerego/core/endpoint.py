@@ -51,9 +51,9 @@ def _create_set_item(cerego_misc, set_id, concept_id):
     params = {"association_collection[concept_id]": concept_id}
     return _root_call("POST", "sets/" + str(set_id) + "/items", cerego_misc=cerego_misc, response_type="json", params=params)
 
-def _create_set_facet(cerego_misc, item_id, set_id, association_concept_id):
+def _create_set_facet(cerego_misc, item_id, set_id, association_concept_id, label):
 
-    params = {"set_id": set_id, "concept_id": association_concept_id}
+    params = {"set_id": set_id, "concept_id": association_concept_id, "association_label": label}
     return _root_call("POST", "items/" + str(item_id) + "/facets", cerego_misc=cerego_misc, response_type="json", params=params)
 
 def _createImage():
