@@ -98,10 +98,10 @@ class CeregoWrapper(object):
         for key, value in assoc_mapping.iteritems():
             if type(value) is list:
                 for item in value:
-                    self.create_item_anchor_association(key, item["value"], item["label"])
+                    self.create_item_anchor_association(key, item["association"], item["label"])
                     self.load_set_data(s_id)
             else:
-                self.create_item_anchor_association(key, value["value"], value["label"])
+                self.create_item_anchor_association(key, value["association"], value["label"])
                 self.load_set_data(s_id)
 
     def get_scope_id(self, is_concept=False, prev_state=0):
